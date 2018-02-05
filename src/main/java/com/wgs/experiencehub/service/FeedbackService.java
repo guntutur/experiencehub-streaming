@@ -32,7 +32,7 @@ public class FeedbackService implements Serializable {
             System.out.println("records count met condition, continue process...");
             System.out.println("collecting and comparing previous rating with current rating : "+users.get(1).get("rating")+","+feedbackModel.getRating());
 
-            if ((Integer.valueOf(users.get(1).get("rating").toString()) <= 2) && (feedbackModel.getRating() <= 2) ) {
+            if ((Integer.valueOf(users.get(1).get("rating").toString()) <= 2) && (Integer.valueOf(feedbackModel.getRating()) <= 2) ) {
                 String api_key = ApplicationUtil.getConfig().getString("api.key");
                 String urlString = ApplicationUtil.getConfig().getString("api.feedback");
 
