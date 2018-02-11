@@ -29,7 +29,7 @@ public class Test {
         JavaPairDStream<String, Integer> windowedWordsCount = pairs.reduceByKeyAndWindow(
                 (integer, integer2) -> integer + integer2,
                 Durations.seconds(30),
-                Durations.seconds(10)
+                Durations.seconds(2)
         );
 
         // Print the first ten elements of each RDD generated in this DStream to the console
