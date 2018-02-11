@@ -30,7 +30,7 @@ public class FeedbackService implements Serializable {
 
         MongoCollection<Document> coll = database.getCollection(ApplicationUtil.getConfig().getString("mongo.collection.feedback"));
 
-        List<Document> users = coll.find(query).sort(new Document("_id", -1)).limit(2).into(new ArrayList<>());
+        List<Document> users = coll.find(query).sort(new Document("created_at", -1)).limit(2).into(new ArrayList<>());
         if (users.size() == 2) {
             System.out.println("records count met condition, continue process...");
             System.out.println("collecting and comparing previous rating with current rating : "+users.get(1).get("rating")+","+feedbackModel.getRating());
