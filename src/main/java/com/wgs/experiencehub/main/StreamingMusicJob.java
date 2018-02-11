@@ -2,12 +2,9 @@ package com.wgs.experiencehub.main;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.rabbitmq.client.QueueingConsumer;
-
-import com.wgs.experiencehub.model.EntUserFeedbackModel;
-import com.wgs.experiencehub.service.FeedbackService;
-
+import com.wgs.experiencehub.model.EntUserPlayMusicModel;
+import com.wgs.experiencehub.service.MusicService;
 import com.wgs.experiencehub.util.ApplicationUtil;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -23,11 +20,10 @@ import org.apache.spark.streaming.rabbitmq.RabbitMQUtils;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
-public class StreamingFeedbackJob {
+public class StreamingMusicJob {
 
-    private static final FeedbackService feedback = new FeedbackService();
+    private static final MusicService music = new MusicService();
 
     public static void main(String[] args) throws InterruptedException {
 
@@ -54,7 +50,6 @@ public class StreamingFeedbackJob {
         rabbitMqConParams.put("password", ApplicationUtil.getConfig().getString("rabbitmq.password"));
 
         Function<QueueingConsumer.Delivery, String> messageHandler = new Function<QueueingConsumer.Delivery, String>() {
-
             public String call(QueueingConsumer.Delivery message) {
                 return new String(message.getBody());
             }
@@ -69,26 +64,30 @@ public class StreamingFeedbackJob {
         );
 
         System.out.println("================================ Retrieving Streaming Context from Spark Conf");
-        System.out.println("================================ Transforming stream to EntUserFeedbackModel DStream");
-        JavaDStream<EntUserFeedbackModel> message = messages.map(new Function<String, EntUserFeedbackModel>() {
+        System.out.println("================================ Transforming stream to EntUserPlayMusicModel DStream");
+        JavaDStream<EntUserPlayMusicModel> message = messages.map(new Function<String, EntUserPlayMusicModel>() {
             @Override
-            public EntUserFeedbackModel call(String s) throws Exception {
+            public EntUserPlayMusicModel call(String s) throws Exception {
                 ObjectMapper mapper = new ObjectMapper();
                 mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
 
-                return mapper.readValue(s, EntUserFeedbackModel.class);
+                return mapper.readValue(s, EntUserPlayMusicModel.class);
             }
         });
 
-        message.foreachRDD(new VoidFunction<JavaRDD<EntUserFeedbackModel>>() {
+        message.foreachRDD(new VoidFunction<JavaRDD<EntUserPlayMusicModel>>() {
 
             @Override
-            public void call(JavaRDD<EntUserFeedbackModel> userFeedback) throws Exception {
-                userFeedback.foreach(new VoidFunction<EntUserFeedbackModel>() {
+            public void call(JavaRDD<EntUserPlayMusicModel> playMusic) throws Exception {
+                playMusic.foreach(new VoidFunction<EntUserPlayMusicModel>() {
                     @Override
-                    public void call(EntUserFeedbackModel feedbackModel) throws Exception {
-                        if ((!Objects.equals(feedbackModel.getFeedbackId(), "")) && (feedbackModel.getRating() <= 2)) {
-                            feedback.processFeedbackStream(feedbackModel);
+                    public void call(EntUserPlayMusicModel musicModel) throws Exception {
+                        if (music.checkActivePackage(
+                                ApplicationUtil.getConfig().getString("api.music.check-package.url"),
+                                ApplicationUtil.getConfig().getString("api.music.check-package.method"),
+                                musicModel.getUserId(),
+                                musicModel.getSource())) {
+                            music.processMusicStream(musicModel);
                         }
                     }
                 });

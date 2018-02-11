@@ -1,9 +1,7 @@
 package com.wgs.experiencehub.util;
 
-import com.typesafe.config.*;
-
-import java.util.HashMap;
-import java.util.Map;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 /**
  * Created by zer0 , The Maverick Hunter
